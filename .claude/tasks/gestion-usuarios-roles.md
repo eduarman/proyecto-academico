@@ -3,24 +3,27 @@
 Specs: [[gestion-usuarios-roles-requirements]] · [[gestion-usuarios-roles-design]]
 Depende de: [[autenticacion]]
 
+> Estado: **funcional**, con algunos gaps de robustez pendientes (ver abajo). `UsersService` es ahora la única fuente de verdad de usuarios (antes `AuthService` mantenía su propia copia duplicada — corregido en esta sesión).
+
 ## Backend
-- [ ] `UsersModule`: `UsersController`, `UsersService`
-- [ ] `GET /users` con paginación + filtros `role`/`status`/`q` — RF-USR-01
-- [ ] `GET /users/:id`
-- [ ] `POST /users` (`CreateUserDto`) — RF-USR-02
-- [ ] `PATCH /users/:id` (`UpdateUserDto`, incluye rol/estado) — RF-USR-02/03, con regla "no degradar único admin activo"
-- [ ] `PATCH /users/me` (`UpdateOwnProfileDto` — whitelist sin `role`/`status`) — RF-USR-04
-- [ ] `GET /roles`
-- [ ] Al desactivar usuario: revocar refresh tokens — RF-USR-03
-- [ ] Guards `@Roles('ADMIN')` en todos los endpoints excepto `/users/me`
-- [ ] Tests: creación duplicada, degradar único admin (debe fallar), desactivar revoca sesión
+- [x] `UsersModule`: `UsersController`, `UsersService`
+- [x] `GET /users` con filtros `role`/`status` — **sin paginación** ni filtro de texto `q`
+- [x] `GET /users/:id`
+- [ ] `POST /users` dedicado — no existe; el frontend crea usuarios reusando `POST /auth/register` + `PATCH /users/:id` para asignar el rol — RF-USR-02
+- [x] `PATCH /users/:id` (rol/estado) — RF-USR-02/03
+- [ ] Regla "no degradar único admin activo" — **no implementada** (gap real: se puede dejar la plataforma sin ningún admin)
+- [x] `PATCH /users/me` — whitelist sin `role`/`status` (bug de seguridad real encontrado y corregido: antes aceptaba `role` del body y permitía auto-escalar a ADMIN) — RF-USR-04
+- [ ] `GET /roles` — no existe; los roles están hardcoded en el frontend (`ADMIN`/`ESTUDIANTE`)
+- [ ] Al desactivar usuario, revocar refresh tokens — **no implementado** (un usuario desactivado con un access token vigente sigue pudiendo usarlo hasta que expire, ~15 min)
+- [x] Guards `@Roles('ADMIN')` en todos los endpoints excepto `/users/me`
+- [ ] Tests automatizados — no hay; verificado manualmente (incluye prueba explícita de que un estudiante no puede auto-promoverse)
 
 ## Frontend
-- [ ] `composables/usePermissions.ts` (`can(action)` basado en `authStore.user.role`)
-- [ ] `stores/users.store.ts`
-- [ ] `views/admin/AdminUsersView.vue` + `components/users/UserTable.vue` + `UserForm.vue` + `RoleSelect.vue`
-- [ ] `views/user/ProfileView.vue` (compartida, sin campos rol/estado)
-- [ ] Ocultar acciones de gestión si `!can('users:manage')` — RF-USR-05
+- [ ] `composables/usePermissions.ts` — no existe; los checks de rol son inline (`auth.user?.role === 'ADMIN'`) en cada vista
+- [x] `stores/users.js`
+- [x] `views/admin/AdminUsersView.vue` — tabla + diálogo de creación inline (sin `UserTable.vue`/`UserForm.vue`/`RoleSelect.vue` separados); cambio de rol y estado inline en la tabla
+- [x] `views/ProfileView.vue` compartida, sin campos de rol/estado editables por el propio usuario
+- [x] Acciones de gestión de usuarios ocultas para no-admin (ruta protegida por rol)
 
 ## Definition of done
-- [ ] Intentar cambiar el propio rol vía DevTools/Postman contra `/users/me` — confirmar que el backend lo ignora
+- [x] Intentar cambiar el propio rol vía `PATCH /users/me` — confirmado que el backend lo ignora (probado con curl directo, no solo desde la UI)
