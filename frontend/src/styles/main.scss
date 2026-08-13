@@ -1,0 +1,383 @@
+@import 'bootstrap/scss/bootstrap';
+
+// Tokens del diseño "Cursia" (CursosHome / CursosTopNav en Claude Design).
+:root {
+  --cursos-bg: #ffffff;
+  --cursos-bg-cream: #f5efeb;
+  --cursos-text: #2b2a28;
+  --cursos-text-muted: #726f6b;
+  --cursos-border: #ece6de;
+  --cursos-border-nav: #e7e1d9;
+  --cursos-accent: #3e6e90;
+  --cursos-accent-hover: #2f5873;
+  --cursos-accent-bg: #dde7ee;
+  --cursos-avatar-bg: #cbd9e6;
+  --cursos-warm: #d98e5a;
+  --cursos-progress-track: #efe9e1;
+  --cursos-font-heading: 'Poppins', sans-serif;
+  --cursos-font-body: 'Work Sans', sans-serif;
+}
+
+// Layout del panel administrador ("Cursia" admin, sidebar + main).
+.admin-shell {
+  display: flex;
+  min-height: 100vh;
+  font-family: var(--cursos-font-body);
+  background: var(--cursos-bg-cream);
+}
+
+.admin-sidebar {
+  width: 230px;
+  background: var(--cursos-bg);
+  border-right: 1px solid var(--cursos-border);
+  padding: 24px 0;
+  flex: none;
+}
+
+.admin-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px;
+  margin-bottom: 32px;
+}
+
+.admin-sidebar__mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--cursos-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: var(--cursos-font-heading);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.admin-sidebar__word {
+  font-family: var(--cursos-font-heading);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--cursos-text);
+}
+
+.admin-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 12px;
+}
+
+.admin-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--cursos-text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.admin-sidebar__link.is-active {
+  background: var(--cursos-accent-bg);
+  color: var(--cursos-text);
+}
+
+.admin-sidebar__link--top-gap {
+  margin-top: 14px;
+}
+
+.admin-sidebar__link--danger {
+  color: #c0472c;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 32px 40px;
+  min-width: 0;
+}
+
+// Piezas compartidas de las tablas/diálogos admin.
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.admin-header__title {
+  font-family: var(--cursos-font-heading);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--cursos-text);
+  margin: 0 0 4px;
+}
+
+.admin-header__subtitle {
+  font-size: 13.5px;
+  color: var(--cursos-text-muted);
+  margin: 0;
+}
+
+.admin-btn-primary {
+  background: var(--cursos-accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-btn-primary:hover {
+  background: var(--cursos-accent-hover);
+}
+
+.admin-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.admin-link-btn {
+  border: none;
+  background: none;
+  color: var(--cursos-accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+}
+
+.admin-link-btn--danger {
+  color: #c0472c;
+}
+
+.admin-card {
+  background: var(--cursos-bg);
+  border-radius: 16px;
+  border: 1px solid var(--cursos-border);
+  overflow: hidden;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.admin-table thead tr {
+  background: var(--cursos-bg-cream);
+  text-align: left;
+}
+
+.admin-table th {
+  padding: 12px 16px;
+  font-weight: 600;
+  color: var(--cursos-text-muted);
+}
+
+.admin-table td {
+  padding: 12px 16px;
+  color: #4c4a47;
+  border-top: 1px solid var(--cursos-border);
+}
+
+.admin-table td.is-strong {
+  font-weight: 600;
+  color: var(--cursos-text);
+}
+
+.admin-table__empty {
+  padding: 24px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--cursos-text-muted);
+  margin: 0;
+}
+
+.admin-badge {
+  border: none;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.admin-badge--ok {
+  background: #e4eee4;
+  color: #3e7a4e;
+}
+
+.admin-badge--warn {
+  background: #f3ebdc;
+  color: #a2792c;
+}
+
+.admin-badge--muted {
+  background: var(--cursos-progress-track);
+  color: var(--cursos-text-muted);
+}
+
+.admin-badge--danger {
+  background: #f3e4e4;
+  color: #a24a3e;
+}
+
+.admin-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 42, 40, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.admin-dialog {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  width: 440px;
+  max-width: calc(100vw - 32px);
+}
+
+.admin-dialog__title {
+  font-family: var(--cursos-font-heading);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--cursos-text);
+  margin: 0 0 18px;
+}
+
+.admin-field label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--cursos-text);
+  display: block;
+  margin-bottom: 5px;
+}
+
+.admin-field input,
+.admin-field select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d7cfc5;
+  font-size: 13.5px;
+  margin-bottom: 12px;
+  font-family: inherit;
+}
+
+.admin-dialog__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.admin-dialog__actions button {
+  flex: 1;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-dialog__actions .is-primary {
+  background: var(--cursos-accent);
+  color: #fff;
+}
+
+.admin-dialog__actions .is-secondary {
+  background: var(--cursos-bg-cream);
+  color: var(--cursos-text);
+}
+
+.admin-alert {
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.admin-alert.error {
+  background: #fbeae4;
+  color: #c0472c;
+}
+
+.admin-alert.success {
+  background: var(--cursos-accent-bg);
+  color: var(--cursos-accent-hover);
+}
+
+// Formularios de auth/perfil compartidos (login, registro, cambio de datos).
+.cursos-field {
+  margin-bottom: 14px;
+}
+
+.cursos-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cursos-text);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.cursos-field input,
+.cursos-field select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #d7cfc5;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.cursos-submit {
+  width: 100%;
+  background: var(--cursos-accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.cursos-submit:hover:not(:disabled) {
+  background: var(--cursos-accent-hover);
+}
+
+.cursos-submit:disabled {
+  background: #b9c3ca;
+  cursor: not-allowed;
+}
+
+.cursos-form-error {
+  color: #c0472c;
+  font-size: 13.5px;
+  background: #fbeae4;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0 0 14px;
+}
+
