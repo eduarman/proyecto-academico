@@ -168,7 +168,9 @@ onMounted(() => users.fetchAll());
   cursor: default;
   opacity: 0.6;
 }
-
+.edu{
+  color:#fff;
+}
 .admin-field__hint {
   font-size: 11.5px;
   color: var(--cursos-text-muted);
