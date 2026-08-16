@@ -11,7 +11,7 @@
           <div class="register-card__check">✓</div>
           <h2>Cuenta creada</h2>
           <p>Ya puedes iniciar sesión con {{ form.email }}.</p>
-          <RouterLink :to="{ path: '/', query: route.query }" class="cursos-submit register-card__cta">
+          <RouterLink :to="{ path: '/login', query: route.query }" class="cursos-submit register-card__cta">
             Ir a iniciar sesión
           </RouterLink>
         </div>
@@ -60,7 +60,7 @@
         </form>
 
         <p class="register-card__switch">
-          ¿Ya tienes cuenta? <RouterLink :to="{ path: '/', query: route.query }">Inicia sesión</RouterLink>
+          ¿Ya tienes cuenta? <RouterLink :to="{ path: '/login', query: route.query }">Inicia sesión</RouterLink>
         </p>
       </template>
     </div>

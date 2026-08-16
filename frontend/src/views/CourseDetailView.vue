@@ -74,7 +74,7 @@ const enrollDialog = ref(null);
 
 function onEnrollClick() {
   if (!auth.isAuthenticated) {
-    router.push({ path: '/', query: { redirect: route.fullPath, intent: 'enroll' } });
+    router.push({ path: '/login', query: { redirect: route.fullPath, intent: 'enroll' } });
     return;
   }
   enrollDialog.value?.open(course.value);

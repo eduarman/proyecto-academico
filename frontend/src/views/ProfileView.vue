@@ -194,8 +194,9 @@ async function onCancel(id) {
 }
 
 async function onLogout() {
+  const wasAdmin = auth.isAdmin;
   await auth.logout();
-  router.push('/');
+  router.push(wasAdmin ? '/admin/login' : '/login');
 }
 
 onMounted(async () => {

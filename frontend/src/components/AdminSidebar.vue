@@ -39,6 +39,41 @@
     <main class="admin-main">
       <slot />
     </main>
+
+    <nav class="admin-bottomnav">
+      <RouterLink to="/admin/cursos" class="admin-bottomnav__link" :class="{ 'is-active': route.name === 'admin-cursos' }">
+        <span class="admin-bottomnav__icon">📚</span>
+        <span class="admin-bottomnav__label">Cursos</span>
+      </RouterLink>
+      <RouterLink
+        to="/admin/inscripciones"
+        class="admin-bottomnav__link"
+        :class="{ 'is-active': route.name === 'admin-inscripciones' }"
+      >
+        <span class="admin-bottomnav__icon">🧾</span>
+        <span class="admin-bottomnav__label">Inscripc.</span>
+      </RouterLink>
+      <RouterLink
+        to="/admin/usuarios"
+        class="admin-bottomnav__link"
+        :class="{ 'is-active': route.name === 'admin-usuarios' }"
+      >
+        <span class="admin-bottomnav__icon">👥</span>
+        <span class="admin-bottomnav__label">Usuarios</span>
+      </RouterLink>
+      <RouterLink
+        to="/admin/categorias"
+        class="admin-bottomnav__link"
+        :class="{ 'is-active': route.name === 'admin-categorias' }"
+      >
+        <span class="admin-bottomnav__icon">🏷️</span>
+        <span class="admin-bottomnav__label">Categ.</span>
+      </RouterLink>
+      <RouterLink to="/perfil" class="admin-bottomnav__link" :class="{ 'is-active': route.name === 'perfil' }">
+        <span class="admin-bottomnav__icon">⚙️</span>
+        <span class="admin-bottomnav__label">Perfil</span>
+      </RouterLink>
+    </nav>
   </div>
 </template>
 
@@ -52,6 +87,6 @@ const auth = useAuthStore();
 
 async function onLogout() {
   await auth.logout();
-  router.push('/');
+  router.push('/admin/login');
 }
 </script>

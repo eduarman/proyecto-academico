@@ -19,10 +19,36 @@
       <span class="cursos-nav__avatar">{{ initials }}</span>
     </RouterLink>
     <div v-else class="cursos-nav__guest">
-      <RouterLink to="/" class="cursos-nav__link">Iniciar sesión</RouterLink>
+      <RouterLink to="/login" class="cursos-nav__link">Iniciar sesión</RouterLink>
       <RouterLink to="/registro" class="cursos-nav__cta">Regístrate</RouterLink>
     </div>
   </header>
+
+  <nav class="cursos-bottomnav">
+    <RouterLink to="/catalogo" class="cursos-bottomnav__link" :class="{ 'is-active': active === 'Inicio' }">
+      <span class="cursos-bottomnav__icon">🏠</span>
+      <span class="cursos-bottomnav__label">Inicio</span>
+    </RouterLink>
+    <RouterLink
+      v-if="auth.isAuthenticated"
+      to="/perfil"
+      class="cursos-bottomnav__link"
+      :class="{ 'is-active': active === 'Perfil' }"
+    >
+      <span class="cursos-bottomnav__icon">🎓</span>
+      <span class="cursos-bottomnav__label">Mi perfil</span>
+    </RouterLink>
+    <template v-else>
+      <RouterLink to="/login" class="cursos-bottomnav__link">
+        <span class="cursos-bottomnav__icon">🔑</span>
+        <span class="cursos-bottomnav__label">Ingresar</span>
+      </RouterLink>
+      <RouterLink to="/registro" class="cursos-bottomnav__link">
+        <span class="cursos-bottomnav__icon">✍️</span>
+        <span class="cursos-bottomnav__label">Registro</span>
+      </RouterLink>
+    </template>
+  </nav>
 </template>
 
 <script setup>
@@ -153,5 +179,65 @@ const initials = computed(() =>
 
 .cursos-nav__cta:hover {
   background: var(--cursos-accent-hover);
+}
+
+.cursos-bottomnav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .cursos-nav {
+    padding: 14px 20px;
+  }
+
+  .cursos-nav__links,
+  .cursos-nav__guest {
+    display: none;
+  }
+
+  .cursos-nav__username {
+    display: none;
+  }
+
+  .cursos-bottomnav {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    background: var(--cursos-bg);
+    border-top: 1px solid var(--cursos-border-nav);
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -2px 12px rgba(43, 42, 40, 0.06);
+  }
+
+  .cursos-bottomnav__link {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 4px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--cursos-text-muted);
+    font-family: var(--cursos-font-body);
+  }
+
+  .cursos-bottomnav__icon {
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  .cursos-bottomnav__label {
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .cursos-bottomnav__link.is-active {
+    color: var(--cursos-accent);
+    background: var(--cursos-accent-bg);
+  }
 }
 </style>

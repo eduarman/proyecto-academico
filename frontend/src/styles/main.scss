@@ -106,6 +106,76 @@
   min-width: 0;
 }
 
+// Bottom nav sticky del panel admin: oculto en escritorio, visible en móvil/tablet.
+.admin-bottomnav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar {
+    display: none;
+  }
+
+  .admin-main {
+    padding: 20px 16px calc(20px + 64px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .admin-bottomnav {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    background: var(--cursos-bg);
+    border-top: 1px solid var(--cursos-border);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -2px 12px rgba(43, 42, 40, 0.06);
+  }
+
+  .admin-bottomnav__link {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 2px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--cursos-text-muted);
+    font-family: var(--cursos-font-body);
+  }
+
+  .admin-bottomnav__icon {
+    font-size: 19px;
+    line-height: 1;
+  }
+
+  .admin-bottomnav__label {
+    font-size: 10.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .admin-bottomnav__link.is-active {
+    color: var(--cursos-accent);
+    background: var(--cursos-accent-bg);
+  }
+
+  // Las tablas admin (Cursos, Usuarios, Inscripciones, Categorías...) no caben en 375px:
+  // en vez de recortar columnas (Estado/Acciones quedaban invisibles por el overflow:hidden
+  // de .admin-card), se habilita scroll horizontal dentro de la tarjeta.
+  .admin-card {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-table {
+    min-width: 640px;
+  }
+}
+
 // Piezas compartidas de las tablas/diálogos admin.
 .admin-header {
   display: flex;
@@ -379,5 +449,15 @@
   border-radius: 8px;
   padding: 10px 12px;
   margin: 0 0 14px;
+}
+
+// Espacio inferior en móvil para que el bottom nav sticky de estudiante no tape el contenido.
+@media (max-width: 768px) {
+  .cursos-home,
+  .detail-page,
+  .content-page,
+  .profile-page {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
 }
 

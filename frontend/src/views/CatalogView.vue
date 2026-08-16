@@ -115,7 +115,7 @@ const enrollDialog = ref(null);
 
 function onEnrollClick(course) {
   if (!auth.isAuthenticated) {
-    router.push({ path: '/', query: { redirect: `/cursos/${course.id}`, intent: 'enroll' } });
+    router.push({ path: '/login', query: { redirect: `/cursos/${course.id}`, intent: 'enroll' } });
     return;
   }
   enrollDialog.value?.open(course);

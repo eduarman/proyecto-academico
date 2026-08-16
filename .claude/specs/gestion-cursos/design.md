@@ -55,7 +55,7 @@ model Course {
 
 ## Reglas de negocio (service layer)
 - `cuposDisponibles = cupoMaximo - count(enrollments where estado IN ['PENDIENTE','ACTIVA'])` (pendientes reservan cupo tentativo — decisión de diseño para evitar sobreventa; ver [[gestion-inscripciones-design]]).
-- Transición de estado validada con máquina de estados simple: `BORRADOR → PUBLICADO → ARCHIVADO` (no retrocede de `ARCHIVADO`).
+- Transición de estado validada con máquina de estados simple: `BORRADOR → PUBLICADO → ARCHIVADO`, y `ARCHIVADO → PUBLICADO` (desarchivar). No retrocede a `BORRADOR`.
 
 ## Frontend
 - **Catálogo**: `CatalogView.vue` (`/catalogo`) — `CourseCard.vue` en grid, `CourseFilters.vue` (categoría).

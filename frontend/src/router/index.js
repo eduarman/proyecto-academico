@@ -13,7 +13,16 @@ import AdminCategoriesView from '../views/admin/AdminCategoriesView.vue';
 import AdminCourseContentView from '../views/admin/AdminCourseContentView.vue';
 
 const routes = [
-  { path: '/', name: 'login', component: LoginView, meta: { guestOnly: true } },
+  // El público entra directo al catálogo; el login del estudiante vive en /login.
+  { path: '/', redirect: '/catalogo' },
+  { path: '/login', name: 'login', component: LoginView, meta: { guestOnly: true } },
+  {
+    path: '/admin/login',
+    name: 'admin-login',
+    component: LoginView,
+    props: { admin: true },
+    meta: { guestOnly: true },
+  },
   { path: '/registro', name: 'registro', component: RegisterView, meta: { guestOnly: true } },
   // Catálogo y detalle de curso son públicos: se puede navegar sin sesión.
   // La inscripción sí exige login (se pide al hacer clic en "Inscribirme").
@@ -69,7 +78,8 @@ router.beforeEach((to) => {
   const auth = useAuthStore();
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    return { name: 'login', query: { redirect: to.fullPath } };
+    const loginName = to.meta.roles?.includes('ADMIN') ? 'admin-login' : 'login';
+    return { name: loginName, query: { redirect: to.fullPath } };
   }
 
   if (to.meta.roles && !to.meta.roles.includes(auth.user?.role)) {

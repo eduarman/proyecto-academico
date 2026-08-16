@@ -39,7 +39,7 @@
                   class="admin-link-btn"
                   @click="onChangeStatus(course)"
                 >
-                  {{ nextStatus(course.status) === 'PUBLICADO' ? 'Publicar' : 'Archivar' }}
+                  {{ STATUS_ACTION_LABEL[course.status] }}
                 </button>
                 <RouterLink class="admin-link-btn" :to="`/admin/inscripciones?courseId=${course.id}`">
                   Inscripciones
@@ -120,7 +120,8 @@ import AdminSidebar from '../../components/AdminSidebar.vue';
 import { useCoursesStore } from '../../stores/courses';
 import { useCategoriesStore } from '../../stores/categories';
 
-const STATUS_TRANSITIONS = { BORRADOR: 'PUBLICADO', PUBLICADO: 'ARCHIVADO', ARCHIVADO: null };
+const STATUS_TRANSITIONS = { BORRADOR: 'PUBLICADO', PUBLICADO: 'ARCHIVADO', ARCHIVADO: 'PUBLICADO' };
+const STATUS_ACTION_LABEL = { BORRADOR: 'Publicar', PUBLICADO: 'Archivar', ARCHIVADO: 'Desarchivar' };
 const STATUS_BADGE = { BORRADOR: 'admin-badge--muted', PUBLICADO: 'admin-badge--ok', ARCHIVADO: 'admin-badge--danger' };
 
 const courses = useCoursesStore();

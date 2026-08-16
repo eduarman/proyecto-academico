@@ -27,11 +27,11 @@ interface CourseRow {
 
 const COLUMNS = 'id,title,category,status,max_seats,start_date,end_date';
 
-// BORRADOR -> PUBLICADO -> ARCHIVADO; no retrocede. Ver gestion-cursos/design.md.
+// BORRADOR -> PUBLICADO -> ARCHIVADO, y ARCHIVADO -> PUBLICADO (desarchivar). Ver gestion-cursos/design.md.
 const STATUS_TRANSITIONS: Record<CourseStatus, CourseStatus[]> = {
   BORRADOR: ['PUBLICADO'],
   PUBLICADO: ['ARCHIVADO'],
-  ARCHIVADO: [],
+  ARCHIVADO: ['PUBLICADO'],
 };
 
 function toCourse(row: CourseRow): Course {

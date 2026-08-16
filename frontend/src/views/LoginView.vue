@@ -7,9 +7,13 @@
       </div>
 
       <template v-if="!showForgot">
-        <h1 class="login-page__title">Bienvenido de nuevo</h1>
+        <h1 class="login-page__title">{{ admin ? 'Acceso administrador' : 'Bienvenido de nuevo' }}</h1>
         <p class="login-page__subtitle">
-          Inicia sesión para continuar con tus cursos de Office, SQL, Análisis de Datos y Marketing.
+          {{
+            admin
+              ? 'Inicia sesión con tu cuenta de administrador para gestionar cursos, usuarios e inscripciones.'
+              : 'Inicia sesión para continuar con tus cursos de Office, SQL, Análisis de Datos y Marketing.'
+          }}
         </p>
 
         <p v-if="isEnrollIntent" class="login-page__intent">
@@ -37,14 +41,14 @@
           </button>
         </form>
 
-        <p class="login-page__switch">
+        <p v-if="!admin" class="login-page__switch">
           ¿No tienes cuenta? <RouterLink :to="{ path: '/registro', query: route.query }">Regístrate</RouterLink>
         </p>
 
         <div class="login-page__demo">
-          <strong>Cuentas de prueba:</strong><br />
-          admin@academia.com · contraseña <code>Admin123</code><br />
-          estudiante@academia.com · contraseña <code>Estudiante123</code>
+          <strong>Cuenta de prueba:</strong><br />
+          <template v-if="admin">admin@academia.com · contraseña <code>Admin123</code></template>
+          <template v-else>estudiante@academia.com · contraseña <code>Estudiante123</code></template>
         </div>
       </template>
 
@@ -73,16 +77,22 @@
 
     <div class="login-page__hero-col">
       <div class="login-page__hero-inner">
-        <h2>Aprende a tu ritmo, desde donde estés.</h2>
-        <p>
-          Cursos prácticos de Office, SQL, Análisis de Datos y Marketing para estudiantes, profesionales y familias.
-        </p>
-        <div class="login-page__pills">
-          <span>Office</span>
-          <span>SQL</span>
-          <span>Análisis de Datos</span>
-          <span>Marketing</span>
-        </div>
+        <template v-if="admin">
+          <h2>Panel de administración</h2>
+          <p>Gestiona cursos, categorías, usuarios e inscripciones de Cursia.</p>
+        </template>
+        <template v-else>
+          <h2>Aprende a tu ritmo, desde donde estés.</h2>
+          <p>
+            Cursos prácticos de Office, SQL, Análisis de Datos y Marketing para estudiantes, profesionales y familias.
+          </p>
+          <div class="login-page__pills">
+            <span>Office</span>
+            <span>SQL</span>
+            <span>Análisis de Datos</span>
+            <span>Marketing</span>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -93,11 +103,13 @@ import { computed, reactive, ref } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 
+const { admin } = defineProps({ admin: { type: Boolean, default: false } });
+
 const auth = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 
-const isEnrollIntent = computed(() => route.query.intent === 'enroll');
+const isEnrollIntent = computed(() => !admin && route.query.intent === 'enroll');
 
 const form = reactive({ email: '', password: '' });
 const loading = ref(false);
@@ -112,6 +124,11 @@ async function onSubmit() {
   error.value = null;
   try {
     await auth.login({ ...form });
+    if (admin && !auth.isAdmin) {
+      auth.clearSession();
+      error.value = 'Esta cuenta no tiene permisos de administrador.';
+      return;
+    }
     const redirect = route.query.redirect ?? (auth.isAdmin ? '/admin/cursos' : '/catalogo');
     router.push(redirect);
   } catch (err) {
