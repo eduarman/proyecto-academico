@@ -209,4 +209,65 @@ onMounted(async () => {
   text-align: center;
   color: var(--cursos-text-muted);
 }
+
+/* Móvil: se apila en una columna y la tarjeta de inscripción (con el botón) se adelanta
+   justo después del hero, antes del texto largo — así queda visible sin scrollear de más.
+   `display:contents` en el primer bloque del grid "disuelve" su caja y promueve sus hijos
+   (tag/título/meta/hero/descripción) a items directos del grid, para poder reordenarlos
+   junto con la tarjeta sin tocar el HTML. */
+@media (max-width: 768px) {
+  .detail-content {
+    padding: 20px 16px 40px;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-top: 16px;
+  }
+
+  .detail-grid > div:first-child {
+    display: contents;
+  }
+
+  .cursos-tag {
+    order: 1;
+  }
+
+  .detail-title {
+    order: 2;
+    font-size: 22px;
+    margin: 10px 0 8px;
+  }
+
+  .detail-meta {
+    order: 3;
+    margin-bottom: 16px;
+  }
+
+  .detail-hero {
+    order: 4;
+    height: 160px;
+    font-size: 44px;
+    margin-bottom: 4px;
+  }
+
+  .detail-grid > div:last-child {
+    order: 5;
+  }
+
+  .detail-card {
+    position: static;
+    box-shadow: none;
+  }
+
+  .detail-section-title {
+    order: 6;
+    margin-top: 4px;
+  }
+
+  .detail-body-text {
+    order: 7;
+  }
+}
 </style>
