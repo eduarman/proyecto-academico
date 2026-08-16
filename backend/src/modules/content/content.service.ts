@@ -1,8 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
-import { existsSync, mkdirSync, unlinkSync } from 'fs';
-import { join } from 'path';
-import { CoursesService } from '../courses/courses.service';
+import type { Bindings } from '../../env';
+import { getSupabase } from '../../lib/supabase';
+import { badRequest, notFound } from '../../lib/http-error';
+import { findCourseById } from '../courses/courses.service';
 
 export type LessonType = 'PDF' | 'VIDEO';
 
@@ -19,130 +18,179 @@ export interface LessonRecord {
   courseId: string;
   title: string;
   type: LessonType;
-  fileName: string;
+  fileKey: string;
   originalName: string;
   mimeType: string;
   createdAt: string;
 }
 
-export const UPLOADS_DIR = join(process.cwd(), 'uploads', 'lessons');
+interface ModuleRow {
+  id: string;
+  course_id: string;
+  title: string;
+  created_at: string;
+}
 
-@Injectable()
-export class ContentService {
-  private readonly modules: CourseModuleRecord[] = [];
-  private readonly lessons: LessonRecord[] = [];
+interface LessonRow {
+  id: string;
+  module_id: string;
+  course_id: string;
+  title: string;
+  type: LessonType;
+  file_key: string;
+  original_name: string;
+  mime_type: string;
+  created_at: string;
+}
 
-  constructor(private readonly coursesService: CoursesService) {
-    if (!existsSync(UPLOADS_DIR)) {
-      mkdirSync(UPLOADS_DIR, { recursive: true });
-    }
-  }
+const MODULE_COLUMNS = 'id,course_id,title,created_at';
+const LESSON_COLUMNS = 'id,module_id,course_id,title,type,file_key,original_name,mime_type,created_at';
 
-  findByCourse(courseId: string) {
-    this.coursesService.findOne(courseId);
-    return this.modules
-      .filter((module) => module.courseId === courseId)
-      .map((module) => ({
-        ...module,
-        lessons: this.lessons
-          .filter((lesson) => lesson.moduleId === module.id)
-          .map(({ fileName, ...rest }) => rest),
-      }));
-  }
+function toModule(row: ModuleRow): CourseModuleRecord {
+  return { id: row.id, courseId: row.course_id, title: row.title, createdAt: row.created_at };
+}
 
-  createModule(courseId: string, title: string) {
-    this.coursesService.findOne(courseId);
-    const module: CourseModuleRecord = {
-      id: `mod-${randomUUID()}`,
-      courseId,
-      title: title.trim(),
-      createdAt: new Date().toISOString(),
+function toLesson(row: LessonRow): LessonRecord {
+  return {
+    id: row.id,
+    moduleId: row.module_id,
+    courseId: row.course_id,
+    title: row.title,
+    type: row.type,
+    fileKey: row.file_key,
+    originalName: row.original_name,
+    mimeType: row.mime_type,
+    createdAt: row.created_at,
+  };
+}
+
+export async function findContentByCourse(env: Bindings, courseId: string) {
+  await findCourseById(env, courseId);
+
+  const db = getSupabase(env);
+  const { data: moduleRows, error: moduleError } = await db
+    .from('course_modules')
+    .select(MODULE_COLUMNS)
+    .eq('course_id', courseId)
+    .order('created_at');
+  if (moduleError) throw moduleError;
+
+  const { data: lessonRows, error: lessonError } = await db
+    .from('lessons')
+    .select(LESSON_COLUMNS)
+    .eq('course_id', courseId)
+    .order('created_at');
+  if (lessonError) throw lessonError;
+
+  const lessons = (lessonRows as LessonRow[]).map(toLesson);
+
+  return (moduleRows as ModuleRow[]).map((moduleRow) => {
+    const module = toModule(moduleRow);
+    return {
+      ...module,
+      lessons: lessons
+        .filter((lesson) => lesson.moduleId === module.id)
+        .map(({ fileKey, ...rest }) => rest),
     };
-    this.modules.push(module);
-    return module;
-  }
+  });
+}
 
-  removeModule(id: string) {
-    const index = this.modules.findIndex((module) => module.id === id);
-    if (index === -1) {
-      throw new NotFoundException('Módulo no encontrado');
-    }
+export async function createCourseModule(env: Bindings, courseId: string, title: string): Promise<CourseModuleRecord> {
+  await findCourseById(env, courseId);
 
-    const lessonsToRemove = this.lessons.filter((lesson) => lesson.moduleId === id);
-    lessonsToRemove.forEach((lesson) => this.deleteLessonFile(lesson.fileName));
-    this.lessons.splice(
-      0,
-      this.lessons.length,
-      ...this.lessons.filter((lesson) => lesson.moduleId !== id),
-    );
+  const db = getSupabase(env);
+  const { data, error } = await db
+    .from('course_modules')
+    .insert({ course_id: courseId, title: title.trim() })
+    .select(MODULE_COLUMNS)
+    .single();
+  if (error) throw error;
+  return toModule(data as ModuleRow);
+}
 
-    const [removed] = this.modules.splice(index, 1);
-    return removed;
-  }
+export async function findModule(env: Bindings, id: string): Promise<CourseModuleRecord> {
+  const db = getSupabase(env);
+  const { data, error } = await db.from('course_modules').select(MODULE_COLUMNS).eq('id', id).maybeSingle();
+  if (error) throw error;
+  if (!data) throw notFound('Módulo no encontrado');
+  return toModule(data as ModuleRow);
+}
 
-  findModule(id: string) {
-    const module = this.modules.find((entry) => entry.id === id);
-    if (!module) {
-      throw new NotFoundException('Módulo no encontrado');
-    }
-    return module;
-  }
+// Devuelve las lecciones eliminadas (con fileKey) para que el caller borre los objetos R2.
+export async function removeModuleWithLessons(
+  env: Bindings,
+  id: string,
+): Promise<{ module: CourseModuleRecord; removedLessons: LessonRecord[] }> {
+  const module = await findModule(env, id);
 
-  createLesson(
-    moduleId: string,
-    data: { title: string; type: LessonType },
-    file: Express.Multer.File,
-  ) {
-    const module = this.findModule(moduleId);
+  const db = getSupabase(env);
+  const { data: lessonRows, error: lessonError } = await db
+    .from('lessons')
+    .select(LESSON_COLUMNS)
+    .eq('module_id', id);
+  if (lessonError) throw lessonError;
 
-    const lesson: LessonRecord = {
-      id: `lesson-${randomUUID()}`,
-      moduleId,
-      courseId: module.courseId,
-      title: data.title.trim(),
-      type: data.type,
-      fileName: file.filename,
-      originalName: file.originalname,
-      mimeType: file.mimetype,
-      createdAt: new Date().toISOString(),
-    };
-    this.lessons.push(lesson);
-    const { fileName, ...rest } = lesson;
-    return rest;
-  }
+  const { error: deleteError } = await db.from('course_modules').delete().eq('id', id);
+  if (deleteError) throw deleteError;
 
-  findLesson(id: string) {
-    const lesson = this.lessons.find((entry) => entry.id === id);
-    if (!lesson) {
-      throw new NotFoundException('Lección no encontrada');
-    }
-    return lesson;
-  }
+  return { module, removedLessons: (lessonRows as LessonRow[]).map(toLesson) };
+}
 
-  removeLesson(id: string) {
-    const index = this.lessons.findIndex((entry) => entry.id === id);
-    if (index === -1) {
-      throw new NotFoundException('Lección no encontrada');
-    }
-    const [removed] = this.lessons.splice(index, 1);
-    this.deleteLessonFile(removed.fileName);
-    return removed;
-  }
+export async function findLesson(env: Bindings, id: string): Promise<LessonRecord> {
+  const db = getSupabase(env);
+  const { data, error } = await db.from('lessons').select(LESSON_COLUMNS).eq('id', id).maybeSingle();
+  if (error) throw error;
+  if (!data) throw notFound('Lección no encontrada');
+  return toLesson(data as LessonRow);
+}
 
-  private deleteLessonFile(fileName: string) {
-    const filePath = join(UPLOADS_DIR, fileName);
-    if (existsSync(filePath)) {
-      try {
-        unlinkSync(filePath);
-      } catch {
-        // Best-effort: si el archivo no se puede borrar, no bloquea la operación.
-      }
-    }
-  }
+export interface CreateLessonInput {
+  moduleId: string;
+  title: string;
+  type: LessonType;
+  fileKey: string;
+  originalName: string;
+  mimeType: string;
+}
 
-  static assertValidUpload(file?: Express.Multer.File) {
-    if (!file) {
-      throw new BadRequestException('El archivo es obligatorio');
-    }
-  }
+export async function createLesson(env: Bindings, input: CreateLessonInput): Promise<LessonRecord> {
+  const module = await findModule(env, input.moduleId);
+
+  const db = getSupabase(env);
+  const { data, error } = await db
+    .from('lessons')
+    .insert({
+      module_id: module.id,
+      course_id: module.courseId,
+      title: input.title.trim(),
+      type: input.type,
+      file_key: input.fileKey,
+      original_name: input.originalName,
+      mime_type: input.mimeType,
+    })
+    .select(LESSON_COLUMNS)
+    .single();
+  if (error) throw error;
+  return toLesson(data as LessonRow);
+}
+
+export async function removeLessonRecord(env: Bindings, id: string): Promise<LessonRecord> {
+  const lesson = await findLesson(env, id);
+  const db = getSupabase(env);
+  const { error } = await db.from('lessons').delete().eq('id', id);
+  if (error) throw error;
+  return lesson;
+}
+
+export function buildLessonFileKey(originalName: string): string {
+  const dotIndex = originalName.lastIndexOf('.');
+  const ext = dotIndex >= 0 ? originalName.slice(dotIndex) : '';
+  return `lessons/${crypto.randomUUID()}${ext}`;
+}
+
+export function assertValidUpload(file: File | undefined): asserts file is File {
+  if (!file) throw badRequest('El archivo es obligatorio');
+  const isPdf = file.type === 'application/pdf';
+  const isVideo = file.type.startsWith('video/');
+  if (!isPdf && !isVideo) throw badRequest('Tipo de archivo no permitido (solo PDF o video)');
 }

@@ -1,0 +1,15 @@
+name = "proyecto-academico-api"
+main = "src/index.ts"
+compatibility_date = "2026-08-13"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "production"
+# URL del proyecto de Supabase (Settings -> API -> Project URL). No es secreta.
+SUPABASE_URL = "https://lvijrnvlrzvygrvdyofx.supabase.co"
+# Origen exacto del frontend desplegado (sin barra final). Usado para CORS.
+FRONTEND_ORIGIN = "https://proyecto-academico.eduardo-mantilla.workers.dev"
+
+# Secretos (no van en este archivo, se cargan con `wrangler secret put <NOMBRE>`):
+#   SUPABASE_SERVICE_ROLE_KEY
+#   JWT_SECRET

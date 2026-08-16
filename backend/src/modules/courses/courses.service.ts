@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateCourseDto, UpdateCourseDto } from './dto';
-import { CategoriesService } from '../categories/categories.service';
+import type { Bindings, RequestUser } from '../../env';
+import { getSupabase } from '../../lib/supabase';
+import { badRequest, notFound } from '../../lib/http-error';
+import { categoryExists } from '../categories/categories.service';
 
 export type CourseStatus = 'BORRADOR' | 'PUBLICADO' | 'ARCHIVADO';
 
@@ -14,9 +15,17 @@ export interface Course {
   endDate: string;
 }
 
-export interface RequestUser {
-  role: 'ADMIN' | 'ESTUDIANTE';
+interface CourseRow {
+  id: string;
+  title: string;
+  category: string;
+  status: CourseStatus;
+  max_seats: number;
+  start_date: string;
+  end_date: string;
 }
+
+const COLUMNS = 'id,title,category,status,max_seats,start_date,end_date';
 
 // BORRADOR -> PUBLICADO -> ARCHIVADO; no retrocede. Ver gestion-cursos/design.md.
 const STATUS_TRANSITIONS: Record<CourseStatus, CourseStatus[]> = {
@@ -25,109 +34,142 @@ const STATUS_TRANSITIONS: Record<CourseStatus, CourseStatus[]> = {
   ARCHIVADO: [],
 };
 
-@Injectable()
-export class CoursesService {
-  private readonly courses: Course[] = [
-    {
-      id: 'course-1',
-      title: 'Excel Avanzado',
-      category: 'OFFICE',
-      status: 'PUBLICADO',
-      maxSeats: 20,
-      startDate: '2026-09-01',
-      endDate: '2026-09-15',
-    },
-    {
-      id: 'course-2',
-      title: 'SQL para análisis',
-      category: 'SQL',
-      status: 'BORRADOR',
-      maxSeats: 15,
-      startDate: '2026-10-01',
-      endDate: '2026-10-20',
-    },
-  ];
+function toCourse(row: CourseRow): Course {
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    status: row.status,
+    maxSeats: row.max_seats,
+    startDate: row.start_date,
+    endDate: row.end_date,
+  };
+}
 
-  constructor(private readonly categoriesService: CategoriesService) {}
+// user es undefined para visitantes no autenticados (catálogo público): mismo trato que ESTUDIANTE.
+export async function findAllCourses(
+  env: Bindings,
+  user: RequestUser | undefined,
+  category?: string,
+  status?: string,
+): Promise<Course[]> {
+  const db = getSupabase(env);
+  let query = db.from('courses').select(COLUMNS);
 
-  // user es undefined para visitantes no autenticados (catálogo público): mismo trato que ESTUDIANTE.
-  findAll(user: RequestUser | undefined, category?: string, status?: string) {
-    if (user?.role === 'ADMIN') {
-      return this.courses.filter(
-        (course) => (!category || course.category === category) && (!status || course.status === status),
-      );
-    }
-
-    // Estudiante o visitante público: solo cursos publicados, sin importar el filtro de estado que envíe.
-    return this.courses.filter((course) => course.status === 'PUBLICADO' && (!category || course.category === category));
+  if (user?.role === 'ADMIN') {
+    if (category) query = query.eq('category', category);
+    if (status) query = query.eq('status', status);
+  } else {
+    query = query.eq('status', 'PUBLICADO');
+    if (category) query = query.eq('category', category);
   }
 
-  findOne(id: string) {
-    const course = this.courses.find((entry) => entry.id === id);
-    if (!course) {
-      throw new NotFoundException('Curso no encontrado');
-    }
-    return course;
-  }
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data as CourseRow[]).map(toCourse);
+}
 
-  countByCategory(category: string) {
-    return this.courses.filter((course) => course.category === category).length;
-  }
+export async function findCourseById(env: Bindings, id: string): Promise<Course> {
+  const db = getSupabase(env);
+  const { data, error } = await db.from('courses').select(COLUMNS).eq('id', id).maybeSingle();
+  if (error) throw error;
+  if (!data) throw notFound('Curso no encontrado');
+  return toCourse(data as CourseRow);
+}
 
-  create(payload: CreateCourseDto) {
-    this.assertValidCategory(payload.category);
-    this.assertValidDateRange(payload.startDate, payload.endDate);
+export async function countCoursesByCategory(env: Bindings, category: string): Promise<number> {
+  const db = getSupabase(env);
+  const { count, error } = await db
+    .from('courses')
+    .select('id', { count: 'exact', head: true })
+    .eq('category', category);
+  if (error) throw error;
+  return count ?? 0;
+}
 
-    const course: Course = {
-      id: `course-${Date.now()}`,
+export interface CreateCourseInput {
+  title: string;
+  category: string;
+  maxSeats: number;
+  startDate: string;
+  endDate: string;
+}
+
+export async function createCourse(env: Bindings, payload: CreateCourseInput): Promise<Course> {
+  await assertValidCategory(env, payload.category);
+  assertValidDateRange(payload.startDate, payload.endDate);
+
+  const db = getSupabase(env);
+  const { data, error } = await db
+    .from('courses')
+    .insert({
       title: payload.title,
       category: payload.category,
       status: 'BORRADOR',
-      maxSeats: payload.maxSeats,
-      startDate: payload.startDate,
-      endDate: payload.endDate,
-    };
-    this.courses.push(course);
-    return course;
-  }
+      max_seats: payload.maxSeats,
+      start_date: payload.startDate,
+      end_date: payload.endDate,
+    })
+    .select(COLUMNS)
+    .single();
+  if (error) throw error;
+  return toCourse(data as CourseRow);
+}
 
-  update(id: string, payload: UpdateCourseDto) {
-    const course = this.findOne(id);
+export interface UpdateCourseInput {
+  title?: string;
+  category?: string;
+  status?: CourseStatus;
+  maxSeats?: number;
+  startDate?: string;
+  endDate?: string;
+}
 
-    if (payload.status && payload.status !== course.status) {
-      if (!STATUS_TRANSITIONS[course.status].includes(payload.status)) {
-        throw new BadRequestException(`Transición ${course.status} → ${payload.status} no permitida`);
-      }
-    }
+export async function updateCourse(env: Bindings, id: string, payload: UpdateCourseInput): Promise<Course> {
+  const course = await findCourseById(env, id);
 
-    if (payload.category) {
-      this.assertValidCategory(payload.category);
-    }
-
-    this.assertValidDateRange(payload.startDate ?? course.startDate, payload.endDate ?? course.endDate);
-
-    Object.assign(course, payload);
-    return course;
-  }
-
-  remove(id: string) {
-    const index = this.courses.findIndex((course) => course.id === id);
-    if (index === -1) {
-      throw new NotFoundException('Curso no encontrado');
-    }
-    const [removed] = this.courses.splice(index, 1);
-    return removed;
-  }
-
-  private assertValidDateRange(startDate: string, endDate: string) {
-    if (new Date(startDate) >= new Date(endDate)) {
-      throw new BadRequestException('La fecha de inicio debe ser anterior a la fecha de fin');
+  if (payload.status && payload.status !== course.status) {
+    if (!STATUS_TRANSITIONS[course.status].includes(payload.status)) {
+      throw badRequest(`Transición ${course.status} → ${payload.status} no permitida`);
     }
   }
 
-  private assertValidCategory(category: string) {
-    if (!this.categoriesService.exists(category)) {
-      throw new BadRequestException(`La categoría "${category}" no existe`);
-    }
+  if (payload.category) {
+    await assertValidCategory(env, payload.category);
+  }
+
+  assertValidDateRange(payload.startDate ?? course.startDate, payload.endDate ?? course.endDate);
+
+  const update: Record<string, unknown> = {};
+  if (payload.title !== undefined) update.title = payload.title;
+  if (payload.category !== undefined) update.category = payload.category;
+  if (payload.status !== undefined) update.status = payload.status;
+  if (payload.maxSeats !== undefined) update.max_seats = payload.maxSeats;
+  if (payload.startDate !== undefined) update.start_date = payload.startDate;
+  if (payload.endDate !== undefined) update.end_date = payload.endDate;
+
+  const db = getSupabase(env);
+  const { data, error } = await db.from('courses').update(update).eq('id', id).select(COLUMNS).single();
+  if (error) throw error;
+  return toCourse(data as CourseRow);
+}
+
+export async function removeCourse(env: Bindings, id: string): Promise<Course> {
+  const db = getSupabase(env);
+  const { data, error } = await db.from('courses').delete().eq('id', id).select(COLUMNS).maybeSingle();
+  if (error) throw error;
+  if (!data) throw notFound('Curso no encontrado');
+  return toCourse(data as CourseRow);
+}
+
+function assertValidDateRange(startDate: string, endDate: string) {
+  if (new Date(startDate) >= new Date(endDate)) {
+    throw badRequest('La fecha de inicio debe ser anterior a la fecha de fin');
+  }
+}
+
+async function assertValidCategory(env: Bindings, category: string) {
+  if (!(await categoryExists(env, category))) {
+    throw badRequest(`La categoría "${category}" no existe`);
   }
 }
