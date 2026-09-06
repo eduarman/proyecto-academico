@@ -2,8 +2,7 @@
   <div class="admin-shell">
     <aside class="admin-sidebar">
       <div class="admin-sidebar__brand">
-        <span class="admin-sidebar__mark">C</span>
-        <span class="admin-sidebar__word">Cursia</span>
+        <img :src="sitisLogo" alt="SITIS Academia" class="admin-sidebar__logo" />
       </div>
       <nav class="admin-sidebar__nav">
         <RouterLink to="/admin/cursos" class="admin-sidebar__link" :class="{ 'is-active': route.name === 'admin-cursos' }">
@@ -80,6 +79,7 @@
 <script setup>
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import sitisLogo from '../assets/sitis-logo.png';
 
 const route = useRoute();
 const router = useRouter();

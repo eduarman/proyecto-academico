@@ -2,8 +2,7 @@
   <div class="register-page">
     <div class="register-card">
       <div class="register-card__brand">
-        <span class="register-card__mark">C</span>
-        <span class="register-card__word">Cursia</span>
+        <img :src="sitisLogo" alt="SITIS Academia" class="register-card__logo" />
       </div>
 
       <template v-if="success">
@@ -71,6 +70,7 @@
 import { reactive, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import sitisLogo from '../assets/sitis-logo.png';
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -127,25 +127,10 @@ async function onSubmit() {
   margin-bottom: 28px;
 }
 
-.register-card__mark {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: var(--cursos-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-family: var(--cursos-font-heading);
-  font-weight: 700;
-  font-size: 15px;
-}
-
-.register-card__word {
-  font-family: var(--cursos-font-heading);
-  font-weight: 700;
-  font-size: 19px;
-  color: var(--cursos-text);
+.register-card__logo {
+  height: 32px;
+  width: auto;
+  display: block;
 }
 
 .register-card__title {

@@ -42,25 +42,10 @@
   margin-bottom: 32px;
 }
 
-.admin-sidebar__mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: var(--cursos-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-family: var(--cursos-font-heading);
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.admin-sidebar__word {
-  font-family: var(--cursos-font-heading);
-  font-weight: 700;
-  font-size: 17px;
-  color: var(--cursos-text);
+.admin-sidebar__logo {
+  height: 30px;
+  width: auto;
+  display: block;
 }
 
 .admin-sidebar__nav {

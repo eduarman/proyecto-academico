@@ -2,8 +2,7 @@
   <div class="login-page">
     <div class="login-page__form-col">
       <div class="login-page__brand">
-        <span class="login-page__mark">C</span>
-        <span class="login-page__word">Cursia</span>
+        <img :src="sitisLogo" alt="SITIS Academia" class="login-page__logo" />
       </div>
 
       <template v-if="!showForgot">
@@ -102,6 +101,7 @@
 import { computed, reactive, ref } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import sitisLogo from '../assets/sitis-logo.png';
 
 const { admin } = defineProps({ admin: { type: Boolean, default: false } });
 
@@ -169,25 +169,10 @@ async function onSendForgot() {
   margin-bottom: 40px;
 }
 
-.login-page__mark {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: var(--cursos-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-family: var(--cursos-font-heading);
-  font-weight: 700;
-  font-size: 15px;
-}
-
-.login-page__word {
-  font-family: var(--cursos-font-heading);
-  font-weight: 700;
-  font-size: 19px;
-  color: var(--cursos-text);
+.login-page__logo {
+  height: 34px;
+  width: auto;
+  display: block;
 }
 
 .login-page__title {

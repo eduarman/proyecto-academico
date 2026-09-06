@@ -1,8 +1,7 @@
 <template>
   <header class="cursos-nav">
     <RouterLink to="/catalogo" class="cursos-nav__brand">
-      <span class="cursos-nav__mark">C</span>
-      <span class="cursos-nav__word">Cursia</span>
+      <img :src="sitisLogo" alt="SITIS Academia" class="cursos-nav__logo" />
     </RouterLink>
 
     <nav class="cursos-nav__links">
@@ -55,6 +54,7 @@
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import sitisLogo from '../assets/sitis-logo.png';
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -90,25 +90,10 @@ const initials = computed(() =>
   text-decoration: none;
 }
 
-.cursos-nav__mark {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: var(--cursos-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-family: var(--cursos-font-heading);
-  font-weight: 700;
-  font-size: 15px;
-}
-
-.cursos-nav__word {
-  font-family: var(--cursos-font-heading);
-  font-weight: 700;
-  font-size: 19px;
-  color: var(--cursos-text);
+.cursos-nav__logo {
+  height: 32px;
+  width: auto;
+  display: block;
 }
 
 .cursos-nav__links {
